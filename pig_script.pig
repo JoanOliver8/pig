@@ -11,5 +11,5 @@ rating = foreach word_rating
  generate tokens::id as id,tokens::text as text, tokens::label as label, dictionary::rating as rate;
 word_group = group rating by (id,text);
 avg_rate = foreach word_group generate group, AVG(rating.rate) as AVG;
-STORE avg_rate INTO '/user/cloudera/pig_analisis_opinions/resultat_analisis_opinions' 
+STORE avg_rate INTO '/user/cloudera/WorkspacePigAnalisisOpinionsExercici/resultat_analisis_opinions' 
  USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE');
