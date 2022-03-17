@@ -12,5 +12,5 @@ rating = foreach word_rating
 word_group = group rating by (id,text,label);
 avg_rate = foreach word_group generate group, AVG(rating.rate) as AVG;
 comparacio = foreach word_group generate group, ((avg_rate > 0 and label==1) or (avg_rate <= 0 and label==0) ? True : False) as comp;
-STORE avg_rate INTO '/user/cloudera/WorkspacePigAnalisisOpinionsExercici/resultat_analisis_opinions' 
+STORE avg_rate, comparacio INTO '/user/cloudera/WorkspacePigAnalisisOpinionsExercici/resultat_analisis_opinions' 
  USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE');
