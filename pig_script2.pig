@@ -16,13 +16,13 @@ comp5 = foreach avg_rate generate group, (((AVG>=0) AND (group.label==1)) OR ((A
 /* STORE comp5 INTO '/user/cloudera/WorkspacePigAnalisisOpinionsExercici/resultat_analisis_opinions' 
  USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE'); */
 
-/* comp5_group = GROUP comp5 ALL; */
-comp5_group_positiu = GROUP comp5 BY comp5.c==1;
-comp5_group_negatiu = GROUP comp5 BY comp5.c==0;
+comp5_group = GROUP comp5 ALL;
 
-comp5_group_count1 = FOREACH comp5_group_positiu GENERATE COUNT(comp5.c);
-comp5_group_count0 = FOREACH comp5_group_negatiu GENERATE COUNT(comp5.c);
+records_each = FOREACH comp5_group 
+                   {
+                      trues = FILTER comp5 BY c == 1;
+                      falses = FILTER comp5 BY c == 0;
 
-comp5_group_count = UNION comp5_group_count1, comp5_group_count0;
-comp5_group_count_total = FOREACH comp5_group_count GENERATE $0, $1;
-STORE comp5_group_count_total INTO '/user/cloudera/WorkspacePigAnalisisOpinionsExercici/resultat_analisis_opinions_count' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE');
+                    GENERATE group, COUNT(trues) as trues, COUNT(falses) as falses;
+                   };
+STORE records_each INTO '/user/cloudera/WorkspacePigAnalisisOpinionsExercici/resultat_analisis_opinions_count' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE');
