@@ -27,13 +27,15 @@ records_each = FOREACH comp5_group
                    };
 /* STORE records_each INTO '/user/cloudera/WorkspacePigAnalisisOpinionsExercici/resultat_analisis_opinions_count' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE'); */
 
-word_rating_group = GROUP word_rating ALL;
-
-records_word = FOREACH word_rating_group 
+records_word = foreach avg_rate generate group, (FOREACH word_rating
                    {
                       word_pos = FILTER word_rating BY dictionary.rating >= 0;
+
+                    GENERATE group, COUNT(word_pos) as word_pos;
+                   }) as word_pos:int, (FOREACH word_rating
+                   {
                       word_neg = FILTER word_rating BY dictionary.rating < 0;
 
-                    GENERATE group, COUNT(word_pos) as word_pos, COUNT(word_neg) as word_neg;
-                   };
+                    GENERATE group, COUNT(word_neg) as word_neg;
+                   }) as word_neg:int, AVG;
 STORE records_word INTO '/user/cloudera/WorkspacePigAnalisisOpinionsExercici/resultat_analisis_opinions_words' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE');
