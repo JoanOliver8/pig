@@ -8,12 +8,12 @@ rating = foreach word_rating generate tokens::id as id,tokens::text as text, tok
 word_group = group rating by (id,text,label);
 avg_rate = foreach word_group generate group, AVG(rating.rate) as AVG;
 
+/* Per cada comentari generam la mitja de les puntuacions de les paraules i la comparació entre la label i la mitja */
 comp5 = foreach avg_rate generate group, (((AVG>=0) AND (group.label==1)) OR ((AVG<0) AND (group.label==0))? 1 : 0) as c:int, AVG;
-/* dump comp5; */
 STORE comp5 INTO '/user/cloudera/WorkspacePigAnalisisOpinionsExercici/resultat_analisis_opinions' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE');
 
 comp5_group = GROUP comp5 ALL;
-
+/* Per cada comentari es fa un recompte de les comparacions positives i negatives i es guarda dins un fitxer */
 records_each = FOREACH comp5_group 
                    {
                       trues = FILTER comp5 BY c == 1;
@@ -23,6 +23,7 @@ records_each = FOREACH comp5_group
                    };
 STORE records_each INTO '/user/cloudera/WorkspacePigAnalisisOpinionsExercici/resultat_analisis_opinions_count' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE');
 
+/* Per cada comentari es fa un recompte de les paraules positives i negatives */
 rating_count= foreach word_group
   {
       positives = FILTER rating BY rate >= 0;
@@ -32,6 +33,7 @@ rating_count= foreach word_group
 rating_nogroup = foreach rating_count generate group.id, group.text, group.label, n_positives, n_negatives;
 comp5_nogroup = foreach comp5 generate group.id, group.text, group.label, c;
 
+/* Es fa un join dels dos fitxers i es trien els camps que volem guardar dins un fitxer */
 rating_join = join comp5_nogroup by (id, text, label) left outer, rating_nogroup by (id, text, label) using 'replicated';
 rating_final = foreach rating_join generate comp5_nogroup::id as id, comp5_nogroup::text as text, comp5_nogroup::label as label, comp5_nogroup::c as c, rating_nogroup::n_positives as n_positives, rating_nogroup::n_negatives as n_negatives;
 STORE rating_final INTO '/user/cloudera/WorkspacePigAnalisisOpinionsExercici/resultat_analisis_opinions_words' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE');
